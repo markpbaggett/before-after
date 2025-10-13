@@ -2,7 +2,7 @@
 
 A lightweight, dependency-free web component for creating before/after image comparison sliders.
 
-Created as part of Texas A&M University's Sesquicentennial Celebration and heavily inspired by Zurb's Twenty / Twenty and Knight Labs's Juxtaposition.js.
+Created as part of Texas A&M University's Sesquicentennial Celebration and heavily inspired by [twentytwenty](https://github.com/zurb/twentytwenty) and Knight Labs's [JuxtaposeJS](https://github.com/NUKnightLab/juxtapose)
 
 ## Features
 
