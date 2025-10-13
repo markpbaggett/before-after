@@ -231,7 +231,7 @@
 
       const img = document.createElement('img');
       img.className = 'before-after-image';
-      img.crossOrigin = 'anonymous';
+      // img.crossOrigin = 'anonymous';
       img.src = type === 'before' ? this.beforeImage : this.afterImage;
       img.alt = type === 'before' ? this.beforeLabel : this.afterLabel;
 
