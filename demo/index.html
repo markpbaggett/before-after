@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Texas A&M Libraries Sesquicentennial Before and After Comparison Slider</title>
+</head>
+<body>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    h1 {
+      margin-bottom: 0.5rem;
+    }
+    p {
+      color: #666;
+      margin-bottom: 2rem;
+    }
+    before-after {
+      display: block;
+      height: 100px;
+      margin-bottom: 3rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+  <h1>Texas A&M Libraries Before & After Slider Demo</h1>
+  <p>Drag the slider to compare your 2 images</p>
+  <before-after 
+       before="https://www.aggienetwork.com/images/thenandnow/fullpano1.jpg"
+       after="https://www.aggienetwork.com/images/thenandnow/fullpano2.jpg"
+       before-label="Before"
+       after-label="After"
+       start-position="30"
+       style="height: 400px;"
+  >
+  </before-after>
+
+  <script src="../src/before-after.js"></script>
+</body>
+</html>

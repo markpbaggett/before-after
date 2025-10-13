@@ -1,0 +1,33 @@
+{
+  "name": "@markpbaggett/before-after",
+  "version": "0.0.1",
+  "description": "A lightweight vanilla JavaScript web component for before/after image comparisons",
+  "main": "dist/before-after.js",
+  "unpkg": "dist/before-after.js",
+  "jsdelivr": "dist/before-after.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "mkdir -p dist && cp src/before-after.js dist/before-after.js",
+    "build:min": "terser src/before-after.js -o dist/before-after.min.js -c -m",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "before-after",
+    "image-comparison",
+    "web-component",
+    "slider",
+    "custom-element"
+  ],
+  "author": "Mark P. Baggett",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/markpbaggett/before-after"
+  },
+  "homepage": "https://markpbaggett.github.io/before-after/demo/",
+  "devDependencies": {
+    "terser": "^5.0.0"
+  }
+}
