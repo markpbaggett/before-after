@@ -65,3 +65,15 @@ before-after {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 ```
+
+## Attributes / Props
+
+| Attribute       | Type     | Default   | Description                                  |
+|-----------------|----------|-----------|----------------------------------------------|
+| `before`        | string   | required  | URL of the before image                      |
+| `after`         | string   | required  | URL of the after image                       |
+| `before-label`  | string   | "Before"  | Label for the before image                   |
+| `after-label`   | string   | "After"   | Label for the after image                    |
+| `start-position`| number   | 50        | Initial slider position (0–100)              |
+| `show-labels`   | boolean  | true      | Show or hide labels                          |
+
