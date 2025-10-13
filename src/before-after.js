@@ -134,6 +134,7 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: opacity 0.2s ease;
     }
 
     .before-after-label.before {
@@ -231,7 +232,6 @@
 
       const img = document.createElement('img');
       img.className = 'before-after-image';
-      // img.crossOrigin = 'anonymous';
       img.src = type === 'before' ? this.beforeImage : this.afterImage;
       img.alt = type === 'before' ? this.beforeLabel : this.afterLabel;
 
@@ -246,6 +246,14 @@
         const label = document.createElement('div');
         label.className = `before-after-label ${type}`;
         label.textContent = type === 'before' ? this.beforeLabel : this.afterLabel;
+
+        // Store reference to label for visibility control
+        if (type === 'before') {
+          this.beforeLabelEl = label;
+        } else {
+          this.afterLabelEl = label;
+        }
+
         container.appendChild(label);
       }
 
@@ -287,9 +295,11 @@
       this.boundMouseUp = this.handleMouseUp.bind(this);
       this.boundTouchMove = this.handleTouchMove.bind(this);
       this.boundTouchEnd = this.handleTouchEnd.bind(this);
+      this.boundKeyDown = this.handleKeyDown.bind(this);
 
       this.slider.addEventListener('mousedown', this.handleMouseDown.bind(this));
       this.slider.addEventListener('touchstart', this.handleTouchStart.bind(this));
+      this.slider.addEventListener('keydown', this.boundKeyDown);
     }
 
     handleMouseDown(e) {
@@ -332,6 +342,36 @@
       document.removeEventListener('touchend', this.boundTouchEnd);
     }
 
+    handleKeyDown(e) {
+      let newPosition = this.sliderPosition;
+      const step = e.shiftKey ? 10 : 1; // Bigger steps with Shift key
+
+      switch(e.key) {
+        case 'ArrowLeft':
+        case 'Left':
+          e.preventDefault();
+          newPosition = Math.max(0, this.sliderPosition - step);
+          break;
+        case 'ArrowRight':
+        case 'Right':
+          e.preventDefault();
+          newPosition = Math.min(100, this.sliderPosition + step);
+          break;
+        case 'Home':
+          e.preventDefault();
+          newPosition = 0;
+          break;
+        case 'End':
+          e.preventDefault();
+          newPosition = 100;
+          break;
+        default:
+          return;
+      }
+
+      this.updateSliderPosition(newPosition);
+    }
+
     updatePosition(clientX) {
       const rect = this.container.getBoundingClientRect();
       const x = clientX - rect.left;
@@ -342,7 +382,17 @@
     updateSliderPosition(percentage) {
       this.sliderPosition = percentage;
       this.slider.style.left = `${percentage}%`;
+      this.slider.setAttribute('aria-valuenow', percentage.toString());
+      this.slider.setAttribute('aria-valuetext', `${Math.round(percentage)}% revealed`);
       this.beforeContainer.style.clipPath = `inset(0 ${100 - percentage}% 0 0)`;
+
+      // Hide labels when they would be mostly clipped
+      if (this.beforeLabelEl) {
+        this.beforeLabelEl.style.opacity = percentage < 15 ? '0' : '1';
+      }
+      if (this.afterLabelEl) {
+        this.afterLabelEl.style.opacity = percentage > 85 ? '0' : '1';
+      }
     }
 
     cleanup() {

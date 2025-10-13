@@ -1,6 +1,6 @@
 {
   "name": "@markpbaggett/before-after",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A lightweight vanilla JavaScript web component for before/after image comparisons",
   "main": "dist/before-after.js",
   "unpkg": "dist/before-after.js",
