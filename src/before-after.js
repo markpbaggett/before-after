@@ -149,7 +149,7 @@
     constructor() {
       super();
       this.attachShadow({ mode: 'open' });
-      
+
       this.sliderPosition = 50;
       this.isDragging = false;
       this.imagesLoaded = { before: false, after: false };
@@ -204,6 +204,8 @@
 
       this.container = document.createElement('div');
       this.container.className = 'before-after-container';
+      this.container.setAttribute('role', 'group');
+      this.container.setAttribute('aria-label', `Image comparison: ${this.beforeLabel} and ${this.afterLabel}`);
 
       this.afterContainer = this.createImageContainer('after');
       this.container.appendChild(this.afterContainer);
@@ -211,7 +213,7 @@
       this.beforeContainer = this.createImageContainer('before');
       this.beforeContainer.classList.add('before-after-before-container');
       this.container.appendChild(this.beforeContainer);
-      
+
       this.slider = this.createSlider();
       this.container.appendChild(this.slider);
 
@@ -229,9 +231,10 @@
 
       const img = document.createElement('img');
       img.className = 'before-after-image';
+      img.crossOrigin = 'anonymous';
       img.src = type === 'before' ? this.beforeImage : this.afterImage;
       img.alt = type === 'before' ? this.beforeLabel : this.afterLabel;
-      
+
       img.addEventListener('load', () => {
         img.classList.add('loaded');
         this.imagesLoaded[type] = true;
@@ -252,6 +255,13 @@
     createSlider() {
       const slider = document.createElement('div');
       slider.className = 'before-after-slider';
+      slider.setAttribute('role', 'slider');
+      slider.setAttribute('aria-label', 'Image comparison slider');
+      slider.setAttribute('aria-valuemin', '0');
+      slider.setAttribute('aria-valuemax', '100');
+      slider.setAttribute('aria-valuenow', this.sliderPosition.toString());
+      slider.setAttribute('aria-valuetext', `${Math.round(this.sliderPosition)}% revealed`);
+      slider.setAttribute('tabindex', '0');
 
       const line = document.createElement('div');
       line.className = 'before-after-slider-line';
@@ -260,8 +270,9 @@
       const button = document.createElement('button');
       button.className = 'before-after-slider-button';
       button.setAttribute('aria-label', 'Drag to compare images');
+      button.setAttribute('tabindex', '-1');
       button.innerHTML = `
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
@@ -285,7 +296,7 @@
       e.preventDefault();
       this.isDragging = true;
       this.updatePosition(e.clientX);
-      
+
       document.addEventListener('mousemove', this.boundMouseMove);
       document.addEventListener('mouseup', this.boundMouseUp);
     }
@@ -304,7 +315,7 @@
     handleTouchStart(e) {
       this.isDragging = true;
       this.updatePosition(e.touches[0].clientX);
-      
+
       document.addEventListener('touchmove', this.boundTouchMove, { passive: false });
       document.addEventListener('touchend', this.boundTouchEnd);
     }
