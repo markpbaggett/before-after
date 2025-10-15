@@ -1,10 +1,10 @@
 /**
  * TAMU Before and After - Before and After Image Comparison Slider
  * A lightweight vanilla JavaScript Web Component for comparing two images from different time periods.
- * 
+ *
  * Usage:
- * <before-after 
- *      before="image1.jpg" 
+ * <before-after
+ *      before="image1.jpg"
  *      after="image2.jpg"
  *      before-label="Before"
  *      after-label="After"
@@ -230,6 +230,10 @@
       const container = document.createElement('div');
       container.className = 'before-after-image-container';
 
+      const figure = document.createElement('figure');
+      const caption = document.createElement('figcaption');
+      caption.innerHTML = "Test";
+
       const img = document.createElement('img');
       img.className = 'before-after-image';
       img.src = type === 'before' ? this.beforeImage : this.afterImage;
@@ -240,7 +244,9 @@
         this.imagesLoaded[type] = true;
       });
 
-      container.appendChild(img);
+      figure.appendChild(img);
+      figure.appendChild(caption);
+      container.appendChild(figure);
 
       if (this.showLabels) {
         const label = document.createElement('div');
