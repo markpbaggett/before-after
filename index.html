@@ -14,6 +14,11 @@
     h1 {
       margin-bottom: 0.5rem;
     }
+    h2 {
+      margin-top: 3rem;
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
     p {
       color: #666;
       margin-bottom: 2rem;
@@ -25,10 +30,23 @@
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    @media (max-width: 768px) {
+      .demo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
   <h1>Texas A&M Libraries Before & After Slider Demo</h1>
   <p>Drag the slider to compare your 2 images</p>
-  <before-after 
+
+  <h2>Horizontal Slider</h2>
+  <before-after
        before="https://www.aggienetwork.com/images/thenandnow/fullpano1.jpg"
        after="https://www.aggienetwork.com/images/thenandnow/fullpano2.jpg"
        before-label="Before"
@@ -38,6 +56,18 @@
   >
   </before-after>
 
-  <script src="https://unpkg.com/@markpbaggett/before-after"></script>
+  <h2>Vertical Slider</h2>
+  <before-after
+       orientation="vertical"
+       before="https://api-pre.library.tamu.edu/iiif/2/aHR0cHM6Ly9hcGktcHJlLmxpYnJhcnkudGFtdS5lZHUvZmNyZXBvL3Jlc3QvYmIvOTcvZjIvM2UvYmI5N2YyM2UtODAzYS00YmQ2LTg0MDYtMDY4MDI2MjM1NTRjL2F1ZHJleS1pbXBvcnRfb2JqZWN0cy8xMS9wYWdlcy9wYWdlXzAvZmlsZXMvMzUzNDA0MjI4Ml8yZGVkMGNmYjY5X28uanBn/full/full/0/default.jpg"
+       after="https://api-pre.library.tamu.edu/iiif/2/aHR0cHM6Ly9hcGktcHJlLmxpYnJhcnkudGFtdS5lZHUvZmNyZXBvL3Jlc3QvYmIvOTcvZjIvM2UvYmI5N2YyM2UtODAzYS00YmQ2LTg0MDYtMDY4MDI2MjM1NTRjL2F1ZHJleS1pbXBvcnRfb2JqZWN0cy80My9wYWdlcy9wYWdlXzAvZmlsZXMvQWNhZGVtaWMlMjBCdWlsZGluZyUyMDc4LnRpZg==/full/full/0/default.jpg"
+       before-label="Top"
+       after-label="Bottom"
+       start-position="50"
+       style="height: 800px;"
+  >
+  </before-after>
+
+  <script src="../src/before-after.js"></script>
 </body>
 </html>
