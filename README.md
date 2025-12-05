@@ -36,6 +36,10 @@ npm install @markpbaggett/before-after
 
 ## Usage
 
+You can load this as a pure web component but make sure you give it a height or it won't appear at all.
+
+````
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -47,13 +51,15 @@ npm install @markpbaggett/before-after
     after="after.jpg"
     before-label="Label that Goes with Before"
     after-label="Label that Goes with After"
-    start-position="50" # where do you want the bar to start
-    style="height: 600px;"> # make sure to set height or viewer won't appear
+    start-position="50" 
+    style="height: 600px;">
   </before-after>
 
   <script src="https://unpkg.com/@markpbaggett/before-after"></script>
 </body>
 </html>
+
+```
 
 ## Styling
 
