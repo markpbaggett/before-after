@@ -12,6 +12,8 @@ Created as part of Texas A&M University's Sesquicentennial Celebration and heavi
 - ♿ Accessible
 - 🎨 Customizable labels
 - 🌐 Works everywhere (Web Components)
+- 🔄 Horizontal and vertical orientations
+
 
 ## Installation
 
@@ -68,12 +70,14 @@ before-after {
 
 ## Attributes / Props
 
-| Attribute       | Type     | Default   | Description                                  |
-|-----------------|----------|-----------|----------------------------------------------|
-| `before`        | string   | required  | URL of the before image                      |
-| `after`         | string   | required  | URL of the after image                       |
-| `before-label`  | string   | "Before"  | Label for the before image                   |
-| `after-label`   | string   | "After"   | Label for the after image                    |
-| `start-position`| number   | 50        | Initial slider position (0–100)              |
-| `show-labels`   | boolean  | true      | Show or hide labels                          |
+| Attribute        | Type     | Default      | Description                                    |
+|------------------|----------|--------------|------------------------------------------------|
+| `before`         | string   | required     | URL of the before image                        |
+| `after`          | string   | required     | URL of the after image                         |
+| `before-label`   | string   | "Before"     | Label for the before image                     |
+| `after-label`    | string   | "After"      | Label for the after image                      |
+| `start-position` | number   | 50           | Initial slider position (0–100)                |
+| `show-labels`    | boolean  | true         | Show or hide labels                            |
+| `orientation`    | string   | "horizontal" | Slider orientation: "horizontal" or "vertical" |
+
 

@@ -36,6 +36,10 @@
       background-color: #f0f0f0;
     }
 
+    .before-after-container.vertical {
+      cursor: ns-resize;
+    }
+
     .before-after-image-container {
       position: absolute;
       top: 0;
@@ -45,6 +49,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      display: flex;
+      flex-direction: column;
     }
 
     .before-after-image {
@@ -54,6 +60,14 @@
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.3s ease;
+    }
+
+    before-after-caption {
+      position: absolute;
+      bottom: -50px;
+      left: 0;
+      right: 0;
+      z-index: 10;
     }
 
     .before-after-image.loaded {
@@ -74,6 +88,17 @@
       cursor: ew-resize;
     }
 
+    .before-after-slider.vertical {
+      left: 0;
+      right: 0;
+      top: auto;
+      bottom: auto;
+      width: auto;
+      height: 4px;
+      transform: translateY(-50%);
+      cursor: ns-resize;
+    }
+
     .before-after-slider-line {
       position: absolute;
       top: 0;
@@ -83,6 +108,16 @@
       background-color: white;
       transform: translateX(-50%);
       box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .before-after-slider.vertical .before-after-slider-line {
+      left: 0;
+      right: 0;
+      top: 50%;
+      bottom: auto;
+      width: auto;
+      height: 2px;
+      transform: translateY(-50%);
     }
 
     .before-after-slider-button {
@@ -104,6 +139,10 @@
       transition: all 0.2s ease;
       padding: 0;
       outline: none;
+    }
+
+    .before-after-slider.vertical .before-after-slider-button {
+      cursor: ns-resize;
     }
 
     .before-after-slider-button:hover {
@@ -144,6 +183,19 @@
     .before-after-label.after {
       right: 1rem;
     }
+
+    .vertical .before-after-label.before {
+      left: auto;
+      right: auto;
+      top: 1rem;
+    }
+
+    .vertical .before-after-label.after {
+      left: auto;
+      right: auto;
+      top: auto;
+      bottom: 1rem;
+    }
   `;
 
   class BeforeAfter extends HTMLElement {
@@ -157,7 +209,7 @@
     }
 
     static get observedAttributes() {
-      return ['before', 'after', 'before-label', 'after-label', 'start-position', 'show-labels'];
+      return ['before', 'after', 'before-label', 'after-label', 'start-position', 'show-labels', 'orientation'];
     }
 
     connectedCallback() {
@@ -199,12 +251,21 @@
       return this.getAttribute('show-labels') !== 'false';
     }
 
+    get orientation() {
+      const value = this.getAttribute('orientation') || 'horizontal';
+      return value === 'vertical' ? 'vertical' : 'horizontal';
+    }
+
+    get isVertical() {
+      return this.orientation === 'vertical';
+    }
+
     render() {
       const style = document.createElement('style');
       style.textContent = CSS;
 
       this.container = document.createElement('div');
-      this.container.className = 'before-after-container';
+      this.container.className = this.isVertical ? 'before-after-container vertical' : 'before-after-container';
       this.container.setAttribute('role', 'group');
       this.container.setAttribute('aria-label', `Image comparison: ${this.beforeLabel} and ${this.afterLabel}`);
 
@@ -233,6 +294,7 @@
       const figure = document.createElement('figure');
       const caption = document.createElement('figcaption');
       caption.innerHTML = "Test";
+      caption.className = 'before-after-caption';
 
       const img = document.createElement('img');
       img.className = 'before-after-image';
@@ -268,7 +330,7 @@
 
     createSlider() {
       const slider = document.createElement('div');
-      slider.className = 'before-after-slider';
+      slider.className = this.isVertical ? 'before-after-slider vertical' : 'before-after-slider';
       slider.setAttribute('role', 'slider');
       slider.setAttribute('aria-label', 'Image comparison slider');
       slider.setAttribute('aria-valuemin', '0');
@@ -285,12 +347,21 @@
       button.className = 'before-after-slider-button';
       button.setAttribute('aria-label', 'Drag to compare images');
       button.setAttribute('tabindex', '-1');
-      button.innerHTML = `
+
+      // Different icon based on orientation
+      const icon = this.isVertical ? `
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      ` : `
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
       `;
+
+      button.innerHTML = icon;
       slider.appendChild(button);
 
       return slider;
@@ -311,7 +382,8 @@
     handleMouseDown(e) {
       e.preventDefault();
       this.isDragging = true;
-      this.updatePosition(e.clientX);
+      const coord = this.isVertical ? e.clientY : e.clientX;
+      this.updatePosition(coord);
 
       document.addEventListener('mousemove', this.boundMouseMove);
       document.addEventListener('mouseup', this.boundMouseUp);
@@ -319,7 +391,8 @@
 
     handleMouseMove(e) {
       if (!this.isDragging) return;
-      this.updatePosition(e.clientX);
+      const coord = this.isVertical ? e.clientY : e.clientX;
+      this.updatePosition(coord);
     }
 
     handleMouseUp() {
@@ -330,7 +403,8 @@
 
     handleTouchStart(e) {
       this.isDragging = true;
-      this.updatePosition(e.touches[0].clientX);
+      const coord = this.isVertical ? e.touches[0].clientY : e.touches[0].clientX;
+      this.updatePosition(coord);
 
       document.addEventListener('touchmove', this.boundTouchMove, { passive: false });
       document.addEventListener('touchend', this.boundTouchEnd);
@@ -339,7 +413,8 @@
     handleTouchMove(e) {
       if (!this.isDragging) return;
       e.preventDefault();
-      this.updatePosition(e.touches[0].clientX);
+      const coord = this.isVertical ? e.touches[0].clientY : e.touches[0].clientX;
+      this.updatePosition(coord);
     }
 
     handleTouchEnd() {
@@ -352,45 +427,85 @@
       let newPosition = this.sliderPosition;
       const step = e.shiftKey ? 10 : 1; // Bigger steps with Shift key
 
-      switch(e.key) {
-        case 'ArrowLeft':
-        case 'Left':
-          e.preventDefault();
-          newPosition = Math.max(0, this.sliderPosition - step);
-          break;
-        case 'ArrowRight':
-        case 'Right':
-          e.preventDefault();
-          newPosition = Math.min(100, this.sliderPosition + step);
-          break;
-        case 'Home':
-          e.preventDefault();
-          newPosition = 0;
-          break;
-        case 'End':
-          e.preventDefault();
-          newPosition = 100;
-          break;
-        default:
-          return;
+      if (this.isVertical) {
+        switch(e.key) {
+          case 'ArrowUp':
+          case 'Up':
+            e.preventDefault();
+            newPosition = Math.max(0, this.sliderPosition - step);
+            break;
+          case 'ArrowDown':
+          case 'Down':
+            e.preventDefault();
+            newPosition = Math.min(100, this.sliderPosition + step);
+            break;
+          case 'Home':
+            e.preventDefault();
+            newPosition = 0;
+            break;
+          case 'End':
+            e.preventDefault();
+            newPosition = 100;
+            break;
+          default:
+            return;
+        }
+      } else {
+        switch(e.key) {
+          case 'ArrowLeft':
+          case 'Left':
+            e.preventDefault();
+            newPosition = Math.max(0, this.sliderPosition - step);
+            break;
+          case 'ArrowRight':
+          case 'Right':
+            e.preventDefault();
+            newPosition = Math.min(100, this.sliderPosition + step);
+            break;
+          case 'Home':
+            e.preventDefault();
+            newPosition = 0;
+            break;
+          case 'End':
+            e.preventDefault();
+            newPosition = 100;
+            break;
+          default:
+            return;
+        }
       }
 
       this.updateSliderPosition(newPosition);
     }
 
-    updatePosition(clientX) {
+    updatePosition(coord) {
       const rect = this.container.getBoundingClientRect();
-      const x = clientX - rect.left;
-      const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+      let percentage;
+
+      if (this.isVertical) {
+        const y = coord - rect.top;
+        percentage = Math.max(0, Math.min(100, (y / rect.height) * 100));
+      } else {
+        const x = coord - rect.left;
+        percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+      }
+
       this.updateSliderPosition(percentage);
     }
 
     updateSliderPosition(percentage) {
       this.sliderPosition = percentage;
-      this.slider.style.left = `${percentage}%`;
+
+      if (this.isVertical) {
+        this.slider.style.top = `${percentage}%`;
+        this.beforeContainer.style.clipPath = `inset(0 0 ${100 - percentage}% 0)`;
+      } else {
+        this.slider.style.left = `${percentage}%`;
+        this.beforeContainer.style.clipPath = `inset(0 ${100 - percentage}% 0 0)`;
+      }
+
       this.slider.setAttribute('aria-valuenow', percentage.toString());
       this.slider.setAttribute('aria-valuetext', `${Math.round(percentage)}% revealed`);
-      this.beforeContainer.style.clipPath = `inset(0 ${100 - percentage}% 0 0)`;
 
       // Hide labels when they would be mostly clipped
       if (this.beforeLabelEl) {
