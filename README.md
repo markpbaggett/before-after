@@ -85,5 +85,8 @@ before-after {
 | `start-position` | number   | 50           | Initial slider position (0–100)                |
 | `show-labels`    | boolean  | true         | Show or hide labels                            |
 | `orientation`    | string   | "horizontal" | Slider orientation: "horizontal" or "vertical" |
+| `link-url`       | string   | optional     | Webpage to link brading to                     |
+| `link-text`      | string   | optional     | Text to list in branding                       |
+| `favicon-url`    | string   | optional     | A link to a tiny image to use before text      |
 
 
