@@ -62,14 +62,6 @@
       transition: opacity 0.3s ease;
     }
 
-    before-after-caption {
-      position: absolute;
-      bottom: -50px;
-      left: 0;
-      right: 0;
-      z-index: 10;
-    }
-
     .before-after-image.loaded {
       opacity: 1;
     }
@@ -196,6 +188,34 @@
       top: auto;
       bottom: 1rem;
     }
+
+    .before-after-link {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      z-index: 20;
+      background-color: rgba(0, 0, 0, 0.75);
+      color: white;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 0.875rem;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s ease;
+    }
+
+    .before-after-link:hover {
+      background-color: rgba(0, 0, 0, 0.9);
+    }
+
+    .before-after-link img {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
   `;
 
   class BeforeAfter extends HTMLElement {
@@ -209,7 +229,7 @@
     }
 
     static get observedAttributes() {
-      return ['before', 'after', 'before-label', 'after-label', 'start-position', 'show-labels', 'orientation'];
+      return ['before', 'after', 'before-label', 'after-label', 'start-position', 'show-labels', 'orientation', 'link-url', 'link-text', 'favicon-url'];
     }
 
     connectedCallback() {
@@ -260,6 +280,18 @@
       return this.orientation === 'vertical';
     }
 
+    get linkUrl() {
+      return this.getAttribute('link-url') || '';
+    }
+
+    get linkText() {
+      return this.getAttribute('link-text') || '';
+    }
+
+    get faviconUrl() {
+      return this.getAttribute('favicon-url') || '';
+    }
+
     render() {
       const style = document.createElement('style');
       style.textContent = CSS;
@@ -279,6 +311,27 @@
       this.slider = this.createSlider();
       this.container.appendChild(this.slider);
 
+      if (this.linkUrl && this.linkText) {
+        const link = document.createElement('a');
+        link.href = this.linkUrl;
+        link.className = 'before-after-link';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+
+        if (this.faviconUrl) {
+          const favicon = document.createElement('img');
+          favicon.src = this.faviconUrl;
+          favicon.alt = '';
+          link.appendChild(favicon);
+        }
+
+        const linkText = document.createElement('span');
+        linkText.textContent = this.linkText;
+        link.appendChild(linkText);
+
+        this.container.appendChild(link);
+      }
+
       this.shadowRoot.innerHTML = '';
       this.shadowRoot.appendChild(style);
       this.shadowRoot.appendChild(this.container);
@@ -291,11 +344,6 @@
       const container = document.createElement('div');
       container.className = 'before-after-image-container';
 
-      const figure = document.createElement('figure');
-      const caption = document.createElement('figcaption');
-      caption.innerHTML = "Test";
-      caption.className = 'before-after-caption';
-
       const img = document.createElement('img');
       img.className = 'before-after-image';
       img.src = type === 'before' ? this.beforeImage : this.afterImage;
@@ -306,9 +354,7 @@
         this.imagesLoaded[type] = true;
       });
 
-      figure.appendChild(img);
-      figure.appendChild(caption);
-      container.appendChild(figure);
+      container.appendChild(img);
 
       if (this.showLabels) {
         const label = document.createElement('div');
