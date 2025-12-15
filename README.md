@@ -38,7 +38,7 @@ npm install @markpbaggett/before-after
 
 You can load this as a pure web component but make sure you give it a height or it won't appear at all.
 
-````
+```
 
 <!DOCTYPE html>
 <html>
