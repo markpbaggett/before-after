@@ -728,12 +728,13 @@
     }
 
     static get observedAttributes() {
-      return ['before', 'after', 'before-label', 'after-label', 'start-opacity'];
+      return ['before', 'after', 'before-label', 'after-label', 'start-opacity', 'auto-play', 'auto-play-speed', 'auto-play-stop-on-interact'];
     }
 
     connectedCallback() {
       this.render();
       this.attachEvents();
+      if (this.autoPlay) this.startAutoPlay();
     }
 
     disconnectedCallback() {
@@ -742,8 +743,10 @@
 
     attributeChangedCallback(name, oldValue, newValue) {
       if (oldValue !== newValue && this.shadowRoot.querySelector('.oc-container')) {
+        this.stopAutoPlay();
         this.render();
         this.attachEvents();
+        if (this.autoPlay) this.startAutoPlay();
       }
     }
 
@@ -752,6 +755,9 @@
     get beforeLabel() { return this.getAttribute('before-label') || 'Before'; }
     get afterLabel()  { return this.getAttribute('after-label')  || 'After'; }
     get startOpacity() { return parseFloat(this.getAttribute('start-opacity') || '50'); }
+    get autoPlay() { return this.hasAttribute('auto-play'); }
+    get autoPlaySpeed() { return parseFloat(this.getAttribute('auto-play-speed') || '3000'); }
+    get autoPlayStopOnInteract() { return this.getAttribute('auto-play-stop-on-interact') !== 'false'; }
 
     render() {
       const style = document.createElement('style');
@@ -852,6 +858,38 @@
       this.beforeLabelEl.style.opacity = this.opacity > 85  ? '0' : '1';
     }
 
+    startAutoPlay() {
+      if (this._rafId) return;
+      this._autoPlayDir = 1;
+      this._autoPlayLastTime = null;
+
+      const tick = (timestamp) => {
+        if (this._autoPlayLastTime === null) {
+          this._autoPlayLastTime = timestamp;
+        }
+        const elapsed = timestamp - this._autoPlayLastTime;
+        this._autoPlayLastTime = timestamp;
+
+        const delta = (elapsed / this.autoPlaySpeed) * 100 * this._autoPlayDir;
+        let next = this.opacity + delta;
+
+        if (next >= 100) { next = 100; this._autoPlayDir = -1; }
+        else if (next <= 0) { next = 0; this._autoPlayDir = 1; }
+
+        this.updateOpacity(next);
+        this._rafId = requestAnimationFrame(tick);
+      };
+
+      this._rafId = requestAnimationFrame(tick);
+    }
+
+    stopAutoPlay() {
+      if (this._rafId) {
+        cancelAnimationFrame(this._rafId);
+        this._rafId = null;
+      }
+    }
+
     opacityFromClientX(clientX) {
       const rect = this.track.getBoundingClientRect();
       return Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
@@ -870,6 +908,7 @@
 
     handleMouseDown(e) {
       e.preventDefault();
+      if (this.autoPlayStopOnInteract) this.stopAutoPlay();
       this.isDragging = true;
       this.thumb.classList.add('dragging');
       this.updateOpacity(this.opacityFromClientX(e.clientX));
@@ -890,6 +929,7 @@
     }
 
     handleTouchStart(e) {
+      if (this.autoPlayStopOnInteract) this.stopAutoPlay();
       this.isDragging = true;
       this.thumb.classList.add('dragging');
       this.updateOpacity(this.opacityFromClientX(e.touches[0].clientX));
@@ -937,6 +977,7 @@
     }
 
     cleanup() {
+      this.stopAutoPlay();
       document.removeEventListener('mousemove', this.boundMouseMove);
       document.removeEventListener('mouseup',   this.boundMouseUp);
       document.removeEventListener('touchmove', this.boundTouchMove);
