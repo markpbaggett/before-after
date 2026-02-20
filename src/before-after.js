@@ -578,4 +578,376 @@
   // Expose the class for Programmatic Use
   window.BeforeAfter = BeforeAfter;
 
+  /**
+   * Opacity Compare - Stacked Image Comparison with Opacity Slider
+   * A web component that stacks two images and lets you drag a slider to
+   * blend between them by adjusting the top image's opacity.
+   *
+   * Usage:
+   * <opacity-compare
+   *      before="image1.jpg"
+   *      after="image2.jpg"
+   *      before-label="Before"
+   *      after-label="After"
+   *      start-opacity="50">
+   * </opacity-compare>
+   */
+
+  const OPACITY_CSS = `
+    :host {
+      display: block;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 400px;
+    }
+
+    .oc-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #f0f0f0;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .oc-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      transition: opacity 0s;
+    }
+
+    .oc-bottom {
+      z-index: 1;
+    }
+
+    .oc-top {
+      z-index: 2;
+    }
+
+    .oc-label {
+      position: absolute;
+      top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: rgba(0, 0, 0, 0.75);
+      color: white;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 10;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: opacity 0.2s ease;
+    }
+
+    .oc-label-before {
+      left: 1rem;
+    }
+
+    .oc-label-after {
+      right: 1rem;
+    }
+
+    .oc-slider-wrap {
+      position: absolute;
+      bottom: 1.25rem;
+      left: 1.5rem;
+      right: 1.5rem;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .oc-slider-track {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.35);
+      border-radius: 3px;
+      position: relative;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+    }
+
+    .oc-slider-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: white;
+      pointer-events: none;
+    }
+
+    .oc-slider-thumb {
+      position: absolute;
+      top: 50%;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid rgba(0, 0, 0, 0.25);
+      transform: translate(-50%, -50%);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+      cursor: grab;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .oc-slider-thumb.dragging {
+      cursor: grabbing;
+      transform: translate(-50%, -50%) scale(1.2);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+    }
+
+    .oc-slider-track:focus {
+      outline: 2px solid white;
+      outline-offset: 3px;
+    }
+
+    .oc-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: white;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+    }
+  `;
+
+  class OpacityCompare extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'open' });
+      this.opacity = 50;
+      this.isDragging = false;
+    }
+
+    static get observedAttributes() {
+      return ['before', 'after', 'before-label', 'after-label', 'start-opacity'];
+    }
+
+    connectedCallback() {
+      this.render();
+      this.attachEvents();
+    }
+
+    disconnectedCallback() {
+      this.cleanup();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+      if (oldValue !== newValue && this.shadowRoot.querySelector('.oc-container')) {
+        this.render();
+        this.attachEvents();
+      }
+    }
+
+    get beforeImage() { return this.getAttribute('before') || ''; }
+    get afterImage()  { return this.getAttribute('after')  || ''; }
+    get beforeLabel() { return this.getAttribute('before-label') || 'Before'; }
+    get afterLabel()  { return this.getAttribute('after-label')  || 'After'; }
+    get startOpacity() { return parseFloat(this.getAttribute('start-opacity') || '50'); }
+
+    render() {
+      const style = document.createElement('style');
+      style.textContent = OPACITY_CSS;
+
+      const container = document.createElement('div');
+      container.className = 'oc-container';
+      container.setAttribute('role', 'group');
+      container.setAttribute('aria-label', `Opacity image comparison: ${this.beforeLabel} and ${this.afterLabel}`);
+
+      // Bottom image (always fully visible)
+      const bottomImg = document.createElement('img');
+      bottomImg.className = 'oc-image oc-bottom';
+      bottomImg.src = this.beforeImage;
+      bottomImg.alt = this.beforeLabel;
+
+      // Top image (opacity controlled by slider)
+      const topImg = document.createElement('img');
+      topImg.className = 'oc-image oc-top';
+      topImg.src = this.afterImage;
+      topImg.alt = this.afterLabel;
+
+      // Labels
+      const beforeLabelEl = document.createElement('div');
+      beforeLabelEl.className = 'oc-label oc-label-before';
+      beforeLabelEl.textContent = this.beforeLabel;
+
+      const afterLabelEl = document.createElement('div');
+      afterLabelEl.className = 'oc-label oc-label-after';
+      afterLabelEl.textContent = this.afterLabel;
+
+      // Slider wrapper (holds eye icons + track)
+      const sliderWrap = document.createElement('div');
+      sliderWrap.className = 'oc-slider-wrap';
+
+      const iconBefore = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      iconBefore.setAttribute('viewBox', '0 0 24 24');
+      iconBefore.setAttribute('fill', 'none');
+      iconBefore.setAttribute('aria-hidden', 'true');
+      iconBefore.classList.add('oc-icon');
+      iconBefore.innerHTML = `<circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>`;
+
+      const track = document.createElement('div');
+      track.className = 'oc-slider-track';
+      track.setAttribute('role', 'slider');
+      track.setAttribute('aria-label', 'Opacity slider');
+      track.setAttribute('aria-valuemin', '0');
+      track.setAttribute('aria-valuemax', '100');
+      track.setAttribute('tabindex', '0');
+
+      const fill = document.createElement('div');
+      fill.className = 'oc-slider-fill';
+
+      const thumb = document.createElement('div');
+      thumb.className = 'oc-slider-thumb';
+
+      track.appendChild(fill);
+      track.appendChild(thumb);
+
+      const iconAfter = iconBefore.cloneNode(true);
+
+      sliderWrap.appendChild(iconBefore);
+      sliderWrap.appendChild(track);
+      sliderWrap.appendChild(iconAfter);
+
+      container.appendChild(bottomImg);
+      container.appendChild(topImg);
+      container.appendChild(beforeLabelEl);
+      container.appendChild(afterLabelEl);
+      container.appendChild(sliderWrap);
+
+      this.shadowRoot.innerHTML = '';
+      this.shadowRoot.appendChild(style);
+      this.shadowRoot.appendChild(container);
+
+      this.container  = container;
+      this.topImg     = topImg;
+      this.track      = track;
+      this.fill       = fill;
+      this.thumb      = thumb;
+      this.beforeLabelEl = beforeLabelEl;
+      this.afterLabelEl  = afterLabelEl;
+
+      this.opacity = this.startOpacity;
+      this.updateOpacity(this.opacity);
+    }
+
+    updateOpacity(value) {
+      this.opacity = Math.max(0, Math.min(100, value));
+      this.topImg.style.opacity   = this.opacity / 100;
+      this.fill.style.width       = `${this.opacity}%`;
+      this.thumb.style.left       = `${this.opacity}%`;
+      this.track.setAttribute('aria-valuenow',  this.opacity.toString());
+      this.track.setAttribute('aria-valuetext', `${Math.round(this.opacity)}% opacity`);
+
+      // Fade out each label when its image is barely visible
+      this.afterLabelEl.style.opacity  = this.opacity < 15  ? '0' : '1';
+      this.beforeLabelEl.style.opacity = this.opacity > 85  ? '0' : '1';
+    }
+
+    opacityFromClientX(clientX) {
+      const rect = this.track.getBoundingClientRect();
+      return Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    }
+
+    attachEvents() {
+      this.boundMouseMove  = this.handleMouseMove.bind(this);
+      this.boundMouseUp    = this.handleMouseUp.bind(this);
+      this.boundTouchMove  = this.handleTouchMove.bind(this);
+      this.boundTouchEnd   = this.handleTouchEnd.bind(this);
+
+      this.track.addEventListener('mousedown',  this.handleMouseDown.bind(this));
+      this.track.addEventListener('touchstart', this.handleTouchStart.bind(this));
+      this.track.addEventListener('keydown',    this.handleKeyDown.bind(this));
+    }
+
+    handleMouseDown(e) {
+      e.preventDefault();
+      this.isDragging = true;
+      this.thumb.classList.add('dragging');
+      this.updateOpacity(this.opacityFromClientX(e.clientX));
+      document.addEventListener('mousemove', this.boundMouseMove);
+      document.addEventListener('mouseup',   this.boundMouseUp);
+    }
+
+    handleMouseMove(e) {
+      if (!this.isDragging) return;
+      this.updateOpacity(this.opacityFromClientX(e.clientX));
+    }
+
+    handleMouseUp() {
+      this.isDragging = false;
+      this.thumb.classList.remove('dragging');
+      document.removeEventListener('mousemove', this.boundMouseMove);
+      document.removeEventListener('mouseup',   this.boundMouseUp);
+    }
+
+    handleTouchStart(e) {
+      this.isDragging = true;
+      this.thumb.classList.add('dragging');
+      this.updateOpacity(this.opacityFromClientX(e.touches[0].clientX));
+      document.addEventListener('touchmove', this.boundTouchMove, { passive: false });
+      document.addEventListener('touchend',  this.boundTouchEnd);
+    }
+
+    handleTouchMove(e) {
+      if (!this.isDragging) return;
+      e.preventDefault();
+      this.updateOpacity(this.opacityFromClientX(e.touches[0].clientX));
+    }
+
+    handleTouchEnd() {
+      this.isDragging = false;
+      this.thumb.classList.remove('dragging');
+      document.removeEventListener('touchmove', this.boundTouchMove);
+      document.removeEventListener('touchend',  this.boundTouchEnd);
+    }
+
+    handleKeyDown(e) {
+      const step = e.shiftKey ? 10 : 1;
+      switch (e.key) {
+        case 'ArrowLeft':
+        case 'Left':
+          e.preventDefault();
+          this.updateOpacity(this.opacity - step);
+          break;
+        case 'ArrowRight':
+        case 'Right':
+          e.preventDefault();
+          this.updateOpacity(this.opacity + step);
+          break;
+        case 'Home':
+          e.preventDefault();
+          this.updateOpacity(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          this.updateOpacity(100);
+          break;
+        default:
+          return;
+      }
+    }
+
+    cleanup() {
+      document.removeEventListener('mousemove', this.boundMouseMove);
+      document.removeEventListener('mouseup',   this.boundMouseUp);
+      document.removeEventListener('touchmove', this.boundTouchMove);
+      document.removeEventListener('touchend',  this.boundTouchEnd);
+    }
+  }
+
+  if (!customElements.get('opacity-compare')) {
+    customElements.define('opacity-compare', OpacityCompare);
+  }
+
+  window.OpacityCompare = OpacityCompare;
+
 })();
